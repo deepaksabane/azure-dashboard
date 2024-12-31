@@ -1,4 +1,4 @@
-AWSTemplateFormatVersion: '2010-09-09'
+AWSTemplateFormatVersion: "2010-09-09"
 Description: This CloudFormation Template deploys the Cloud Intelligence Dashboard for Azure
 
 ### Cloudformation Stack details menu
@@ -47,36 +47,27 @@ Metadata:
 Parameters:
   SourceBucket:
     Type: String
-    Description: The new S3 bucket created which contains Cloud Intelligence
-      Dashboard for Azure installation/source files
+    Description: The new S3 bucket created which contains Cloud Intelligence Dashboard for Azure installation/source files
     Default: bucketname
   PrefixCode:
     Type: String
-    Description: Prefix used to name all resources created by this CloudFormation
-      template. Use 3 alphanumeric characters only. Cannot be 'aws'. E.g 'fin'
-      for FinOps
+    Description: Prefix used to name all resources created by this CloudFormation template. Use 3 alphanumeric characters only. Cannot be 'aws'. E.g 'fin' for FinOps
     Default: cid
   EnvironmentCode:
     Type: String
-    Description: Code used to name all resources created by this CloudFormation
-      template. Use 2 alphanumeric characters only. E.g. 'pd' for production
+    Description: Code used to name all resources created by this CloudFormation template. Use 2 alphanumeric characters only. E.g. 'pd' for production
     Default: pd
   OwnerTag:
     Type: String
-    Description: Owner tag value. All resources are created with an 'Owner' tag and
-      the value you set here. e.g. finops, devops, IT shared services, etc.
+    Description: Owner tag value. All resources are created with an 'Owner' tag and the value you set here. e.g. finops, devops, IT shared services, etc.
     Default: Amazon Web Services
   EnvironmentTag:
     Type: String
-    Description: Environment tag value. All resources are created with an
-      'Environment' tag and the value you set here. e.g. production, staging,
-      development
+    Description: Environment tag value. All resources are created with an 'Environment' tag and the value you set here. e.g. production, staging, development
     Default: production
   QuickSightServiceRole:
     Type: String
-    Description: IAM Role used by QuickSight to access Amazon S3. You may not have
-      the below service role or you may have setup a custom role such as
-      CidCmdQuickSightDataSourceRole
+    Description: IAM Role used by QuickSight to access Amazon S3. You may not have the below service role or you may have setup a custom role such as CidCmdQuickSightDataSourceRole
     Default: aws-quicksight-service-role-v0
 
   ### Microsoft Azure Parameters
@@ -108,89 +99,71 @@ Parameters:
     NoEcho: true
   AzureDateFormat:
     Type: String
-    Description: Format of date in Azure cost export, check the date column of your
-      Azure csv export to verify.
-    Default: MM/dd/yyyy
+    Description: Format of date in Azure cost export, check the date column of your Azure csv export to verify.
+    Default: "MM/dd/yyyy"
     AllowedValues:
       - MM/dd/yyyy
       - dd/MM/yyyy
       - yyyy-MM-dd
   AzureFolderPath:
     Type: String
-    Description: Path to Azure cost export folders, used by AWS Glue job.
-      "directory/*" = <azure storage account>/<azure storage
-      container>/directory/* "directory/*/*" = File Partitioning enabled or
-      FOCUS Export
+    Description: Path to Azure cost export folders, used by AWS Glue job. "directory/*" = <azure storage account>/<azure storage container>/directory/* "directory/*/*" = File Partitioning enabled or FOCUS Export
     Default: directory/*
   AzureTags:
     Type: String
-    Description: List of Azure tags names you would like to bring across to
-      QuickSight. WARNING leave a space after each comma. You will need at least
-      one value, make one up if you don't have anything. Case sensitive.
-    Default: Environment, CostCenter, System, Department
+    Description: List of Azure tags names you would like to bring across to QuickSight. WARNING leave a space after each comma. You will need at least one value, make one up if you don't have anything. Case sensitive.
+    Default: "Environment, CostCenter, System, Department"
   AzureOverwritedataEnabled:
     Type: String
-    Description: Select "true" if the Azure Export is set to overwrite the same file
-      throughout the month, rather than generating a new file for each export.
-    Default: 'false'
+    Description: Select "true" if the Azure Export is set to overwrite the same file throughout the month, rather than generating a new file for each export.
+    Default: "false"
     AllowedValues:
-      - 'true'
-      - 'false'
-
+      - "true"
+      - "false"
+  
   ### Export Settings
   ExportType:
     Type: String
-    Description: Select the type of Azure export you configured. Select "Standard"
-      for the regular expor or "FOCUS" for the FOCUS specification.
-    Default: Standard
+    Description: Select the type of Azure export you configured. Select "Standard" for the regular expor or "FOCUS" for the FOCUS specification.
+    Default: "Standard"
     AllowedValues:
-      - Standard
-      - FOCUS
+      - "Standard"
+      - "FOCUS"
 
   ### Data Copy Parameters
   AzureCopySchedule:
     Type: String
-    Description: Scheduled time (UTC) for Azure data pull. Must be a CRON
-      expression. The default sets the schedule to 3am daily
-    Default: cron(0 3 * * ? *)
+    Description: Scheduled time (UTC) for Azure data pull. Must be a CRON expression. The default sets the schedule to 3am daily
+    Default: "cron(0 3 * * ? *)"
   GlueCopySchedule:
     Type: String
-    Description: Scheduled time (UTC) for Glue data processing. Must be a CRON
-      expression. The default sets the schedule to 4am daily. Must be after
-      Azure data pull above
-    Default: cron(0 4 * * ? *)
+    Description: Scheduled time (UTC) for Glue data processing. Must be a CRON expression. The default sets the schedule to 4am daily. Must be after Azure data pull above
+    Default: "cron(0 4 * * ? *)"
   BlobToS3SyncStartDate:
     Type: String
     Description: Minimum age of the objects to be copied. Must be a valid format (YYYYMMDD)
-    Default: '20220820'
+    Default: "20220820"
 
   ### Advanced Parameters
   PartitionSize:
     Description: Multipart upload partition size in bytes
-    Default: '104857600'
+    Default: "104857600"
     Type: String
   MaxPartitionsPerFile:
     Type: String
-    Description: The maximum amount of partitions to create for each multi part
-      file. Must be an integer between 5 and 10000
-    Default: '100'
+    Description: The maximum amount of partitions to create for each multi part file. Must be an integer between 5 and 10000
+    Default: "100"
   UseFullFilePath:
     Type: String
     Description: Retain Azure storage path
-    Default: 'true'
+    Default: "true"
     AllowedValues:
-      - 'true'
-      - 'false'
+      - "true"
+      - "false"
 Conditions:
-  IsAzureOverwriteEnabled: !Equals
-    - !Ref AzureOverwritedataEnabled
-    - 'true'
-  IsExportFocus: !Equals
-    - !Ref ExportType
-    - FOCUS
-  IsExportStandard: !Equals
-    - !Ref ExportType
-    - Standard
+  IsAzureOverwriteEnabled: !Equals [!Ref AzureOverwritedataEnabled, "true"]
+  IsExportFocus: !Equals [!Ref ExportType, "FOCUS"]
+  IsExportStandard: !Equals [!Ref ExportType, "Standard"]
 
 Resources:
   ### Create a Resource Group for CloudFormation resources
@@ -275,7 +248,7 @@ Resources:
       PendingWindowInDays: 7
       EnableKeyRotation: true
       KeyPolicy:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Id: key-default-1
         Statement:
           - Sid: Enable IAM User Permissions
@@ -286,7 +259,7 @@ Resources:
             Action:
               - kms:*
             Resource:
-              - '*'
+              - "*"
           - Sid: Enable Cloudwatch access to KMS Key
             # https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/encrypt-log-data-kms.html
             Effect: Allow
@@ -299,10 +272,10 @@ Resources:
               - kms:GenerateDataKey*
               - kms:Describe*
             Resource:
-              - '*'
+              - "*"
             Condition:
               ArnLike:
-                kms:EncryptionContext:aws:logs:arn: !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:*"
       Tags:
         - Key: Owner
           Value: !Sub ${OwnerTag}
@@ -358,11 +331,11 @@ Resources:
     Properties:
       Bucket: !Ref S3Bucket
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Sid: Allow HTTPS only
             Effect: Deny
-            Principal: '*'
+            Principal: "*"
             Action:
               - s3:*
             Resource:
@@ -373,7 +346,7 @@ Resources:
                 aws:SecureTransport: false
           - Sid: Allow TLS 1.2 and above
             Effect: Deny
-            Principal: '*'
+            Principal: "*"
             Action:
               - s3:*
             Resource:
@@ -390,7 +363,7 @@ Resources:
       Description: Cloud Intelligence Dashboard for Azure IAM role for Glue
       RoleName: !Sub ${PrefixCode}iar${EnvironmentCode}cidazureglue
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -400,7 +373,7 @@ Resources:
       Policies:
         - PolicyName: !Sub ${PrefixCode}iap${EnvironmentCode}cidazureglue
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
@@ -412,9 +385,9 @@ Resources:
                   - glue:UpdatePartition
                   - glue:BatchCreatePartition
                 Resource:
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDatabase}
-                  - !Sub arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDatabase}/${GlueTable}
+                  - !Sub "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:catalog"
+                  - !Sub "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDatabase}"
+                  - !Sub "arn:${AWS::Partition}:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDatabase}/${GlueTable}"
               - Effect: Allow
                 Action:
                   - s3:GetBucketLocation
@@ -470,7 +443,7 @@ Resources:
       Description: Cloud Intelligence Dashboard for Azure IAM role for Lambda
       RoleName: !Sub ${PrefixCode}iar${EnvironmentCode}cidazurelambda
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -480,7 +453,7 @@ Resources:
       Policies:
         - PolicyName: !Sub ${PrefixCode}iap${EnvironmentCode}cidazurelambda
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
@@ -547,7 +520,7 @@ Resources:
       Description: Cloud Intelligence Dashboard IAM role for EventBridge Schedule
       RoleName: !Sub ${PrefixCode}iar${EnvironmentCode}cidazureeventbrg
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -578,11 +551,11 @@ Resources:
         - Key: Name
           Value: !Sub ${PrefixCode}iar${EnvironmentCode}cidazureeventbrg
   DisableMultipartPolicy:
-    Type: AWS::IAM::Policy
+    Type: "AWS::IAM::Policy"
     Properties:
       PolicyName: !Sub ${PrefixCode}iap${EnvironmentCode}disablemultipart
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Action:
@@ -593,11 +566,11 @@ Resources:
       Roles:
         - !Ref GlueIAM
   QuickSightPolicy:
-    Type: AWS::IAM::Policy
+    Type: "AWS::IAM::Policy"
     Properties:
       PolicyName: !Sub ${PrefixCode}iap${EnvironmentCode}cidazurequicksight
       PolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Action:
@@ -629,8 +602,7 @@ Resources:
     Properties:
       DatabaseInput:
         Name: !Sub ${PrefixCode}gld${EnvironmentCode}cidazure
-        Description: Glue catalog database used to process Azure Cloud Intelligence
-          Dashboard data
+        Description: Glue catalog database used to process Azure Cloud Intelligence Dashboard data
       CatalogId: !Ref AWS::AccountId
   GlueTable:
     Type: AWS::Glue::Table
@@ -638,8 +610,7 @@ Resources:
       DatabaseName: !Ref GlueDatabase
       CatalogId: !Ref AWS::AccountId
       TableInput:
-        Description: Glue catalog table for raw data used to by Azure Cloud Intelligence
-          Dashboard
+        Description: Glue catalog table for raw data used to by Azure Cloud Intelligence Dashboard
         Name: !Sub ${PrefixCode}glt${EnvironmentCode}cidazure
         TableType: EXTERNAL_TABLE
         Parameters:
@@ -659,7 +630,7 @@ Resources:
           SerdeInfo:
             Parameters:
               name: my-stream
-              serialization.format: '1'
+              serialization.format: "1"
             SerializationLibrary: org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe
   GlueJob:
     Type: AWS::Glue::Job
@@ -667,39 +638,39 @@ Resources:
       Description: Glue ETL job for Azure Cloud Intelligence Dashboard
       Name: !Sub ${PrefixCode}glj${EnvironmentCode}cidazure
       Role: !Ref GlueIAM
-      GlueVersion: '4.0'
+      GlueVersion: "4.0"
       WorkerType: G.1X
       NumberOfWorkers: 5
       MaxRetries: 0
       Timeout: 60
       Command:
         Name: glueetl
-        ScriptLocation: !Sub s3://${SourceBucket}/cid-azure-gluejob.py
-        PythonVersion: '3'
+        ScriptLocation: !Sub "s3://${SourceBucket}/cid-azure-gluejob.py"
+        PythonVersion: "3"
       DefaultArguments:
-        '--enable-glue-datacatalog': true
-        '--enable-spark-ui': true
-        '--library-set': analytics
-        '--enable-metrics': ''
-        '--enable-job-insights': true
-        '--enable-auto-scaling': true
-        '--job-bookmark-option': job-bookmark-enable
-        '--var_raw_path': !Sub s3://${S3Bucket}/azurecidraw/
-        '--var_parquet_path': !Sub s3://${S3Bucket}/azurecidparquet/
-        '--var_processed_path': !Sub s3://${S3Bucket}/azurecidprocessed/
-        '--var_glue_database': !Ref GlueDatabase
-        '--var_glue_table': !Ref GlueTable
-        '--var_bucket': !Ref S3Bucket
-        '--var_raw_folder': azurecidraw
-        '--var_processed_folder': azurecidprocessed
-        '--var_parquet_folder': azurecidparquet
-        '--var_date_format': !Sub ${AzureDateFormat}
-        '--var_folderpath': !Sub ${AzureFolderPath}
-        '--var_azuretags': !GetAtt SMParameterVarAzureTags.Value
-        '--var_account_type': !Sub ${AccountType}
-        '--var_bulk_run_ssm_name': !Ref SMParameterVarBulkRun
-        '--var_error_folder': azureciderror
-        '--var_lambda01_name': !Sub ${LambdaFunction01}
+        --enable-glue-datacatalog: true
+        --enable-spark-ui: true
+        --library-set: analytics
+        --enable-metrics: ""
+        --enable-job-insights: true
+        --enable-auto-scaling: true
+        --job-bookmark-option: job-bookmark-enable
+        --var_raw_path: !Sub s3://${S3Bucket}/azurecidraw/
+        --var_parquet_path: !Sub s3://${S3Bucket}/azurecidparquet/
+        --var_processed_path: !Sub s3://${S3Bucket}/azurecidprocessed/
+        --var_glue_database: !Ref GlueDatabase
+        --var_glue_table: !Ref GlueTable
+        --var_bucket: !Ref S3Bucket
+        --var_raw_folder: azurecidraw
+        --var_processed_folder: azurecidprocessed
+        --var_parquet_folder: azurecidparquet
+        --var_date_format: !Sub ${AzureDateFormat}
+        --var_folderpath: !Sub ${AzureFolderPath}
+        --var_azuretags: !GetAtt SMParameterVarAzureTags.Value
+        --var_account_type: !Sub ${AccountType}
+        --var_bulk_run_ssm_name: !Ref SMParameterVarBulkRun
+        --var_error_folder: azureciderror
+        --var_lambda01_name: !Sub ${LambdaFunction01}
       SecurityConfiguration: !Ref GlueSecurity
       Tags:
         Customer: !Sub ${OwnerTag}
@@ -712,42 +683,41 @@ Resources:
   GlueJobFocus:
     Type: AWS::Glue::Job
     Properties:
-      Description: Glue ETL job for Azure Cloud Intelligence Dashboard using FOCUS
-        specification
+      Description: Glue ETL job for Azure Cloud Intelligence Dashboard using FOCUS specification
       Name: !Sub ${PrefixCode}glj${EnvironmentCode}cidazurefocus
       Role: !Ref GlueIAM
-      GlueVersion: '4.0'
+      GlueVersion: "4.0"
       WorkerType: G.1X
       NumberOfWorkers: 5
       MaxRetries: 0
       Timeout: 60
       Command:
         Name: glueetl
-        ScriptLocation: !Sub s3://${SourceBucket}/cid-azure-gluejob-FOCUS-1.0.py
-        PythonVersion: '3'
+        ScriptLocation: !Sub "s3://${SourceBucket}/cid-azure-gluejob-FOCUS-1.0.py"
+        PythonVersion: "3"
       DefaultArguments:
-        '--enable-glue-datacatalog': true
-        '--enable-spark-ui': true
-        '--library-set': analytics
-        '--enable-metrics': ''
-        '--enable-job-insights': true
-        '--enable-auto-scaling': true
-        '--job-bookmark-option': job-bookmark-enable
-        '--var_raw_path': !Sub s3://${S3Bucket}/azurecidraw/
-        '--var_parquet_path': !Sub s3://${S3Bucket}/azurecidparquetfocus/
-        '--var_processed_path': !Sub s3://${S3Bucket}/azurecidprocessedfocus/
-        '--var_glue_database': !Ref GlueDatabase
-        '--var_glue_table': !Ref GlueTable
-        '--var_bucket': !Ref S3Bucket
-        '--var_raw_folder': azurecidraw
-        '--var_processed_folder': azurecidprocessedfocus
-        '--var_parquet_folder': azurecidparquetfocus
-        '--var_date_format': !Sub ${AzureDateFormat}
-        '--var_folderpath': !Sub ${AzureFolderPath}
-        '--var_account_type': !Sub ${AccountType}
-        '--var_bulk_run_ssm_name': !Ref SMParameterVarBulkRun
-        '--var_error_folder': azureciderrorfocus
-        '--var_lambda01_name': !Sub ${LambdaFunction01}
+        --enable-glue-datacatalog: true
+        --enable-spark-ui: true
+        --library-set: analytics
+        --enable-metrics: ""
+        --enable-job-insights: true
+        --enable-auto-scaling: true
+        --job-bookmark-option: job-bookmark-enable
+        --var_raw_path: !Sub s3://${S3Bucket}/azurecidraw/
+        --var_parquet_path: !Sub s3://${S3Bucket}/azurecidparquetfocus/
+        --var_processed_path: !Sub s3://${S3Bucket}/azurecidprocessedfocus/
+        --var_glue_database: !Ref GlueDatabase
+        --var_glue_table: !Ref GlueTable
+        --var_bucket: !Ref S3Bucket
+        --var_raw_folder: azurecidraw
+        --var_processed_folder: azurecidprocessedfocus
+        --var_parquet_folder: azurecidparquetfocus
+        --var_date_format: !Sub ${AzureDateFormat}
+        --var_folderpath: !Sub ${AzureFolderPath}
+        --var_account_type: !Sub ${AccountType}
+        --var_bulk_run_ssm_name: !Ref SMParameterVarBulkRun
+        --var_error_folder: azureciderrorfocus
+        --var_lambda01_name: !Sub ${LambdaFunction01}
       SecurityConfiguration: !Ref GlueSecurity
       Tags:
         Customer: !Sub ${OwnerTag}
@@ -807,7 +777,7 @@ Resources:
         Rtype: data
         Name: !Sub ${PrefixCode}glt${EnvironmentCode}cidazurefocus
     Condition: IsExportFocus
-
+  
   ### Create System Manager Parameters used by Glue script
   SMParameterVarAzureTags:
     Type: AWS::SSM::Parameter
@@ -815,8 +785,7 @@ Resources:
       Name: !Sub ${PrefixCode}smp${EnvironmentCode}cidazure-var_azuretags
       Type: String
       Value: !Sub ${AzureTags}
-      Description: Cloud Intelligence Dashboard for Azure parameter. Azure tags to be
-        exposed to QuickSight
+      Description: Cloud Intelligence Dashboard for Azure parameter. Azure tags to be exposed to QuickSight
       Tags:
         Customer: !Sub ${OwnerTag}
         Environment: !Sub ${EnvironmentTag}
@@ -829,13 +798,8 @@ Resources:
     Properties:
       Name: !Sub ${PrefixCode}smp${EnvironmentCode}cidazure-var_bulk_run
       Type: String
-      Value: !If
-        - IsAzureOverwriteEnabled
-        - 'false'
-        - 'true'
-      Description: Cloud Intelligence Dashboard for Azure parameter. Set to true
-        (lowercase t) if this is the first data copy or you are reprocessing.
-        Otherwise, set to false.
+      Value: !If [IsAzureOverwriteEnabled, "false", "true"]
+      Description: Cloud Intelligence Dashboard for Azure parameter. Set to true (lowercase t) if this is the first data copy or you are reprocessing. Otherwise, set to false.
       Tags:
         Customer: !Sub ${OwnerTag}
         Environment: !Sub ${EnvironmentTag}
@@ -849,26 +813,25 @@ Resources:
       Name: !Sub ${PrefixCode}smp${EnvironmentCode}-cidazure-gluenotebookargs
       Type: String
       Value: !Sub |
-        var_raw_path = 's3://${S3Bucket}/azurecidraw/'
-        var_parquet_path = 's3://${S3Bucket}/azurecidparquet/'
-        var_processed_path = 's3://${S3Bucket}/azurecidprocessed/'
-        var_glue_database = '${GlueDatabase}'
-        var_glue_table = '${GlueTable}'
-        var_bucket = '${S3Bucket}'
-        var_raw_folder = 'azurecidraw'
-        var_processed_folder = 'azurecidprocessed'
-        var_parquet_folder = 'azurecidparquet'
-        var_date_format = '${AzureDateFormat}'
-        var_folderpath = '${AzureFolderPath}'
-        var_azuretags = '{{resolve:ssm:${SMParameterVarAzureTags}}}'
-        var_account_type = '${AccountType}'
-        var_bulk_run_ssm_name = '${PrefixCode}smp${EnvironmentCode}cidazure-var_bulk_run'
-        var_error_folder = 'azureciderror'
-        var_lambda01_name = '${LambdaFunction01}'
-        var_raw_fullpath = var_raw_path + var_folderpath
-        SELECTED_TAGS = var_azuretags.split(", ")
-      Description: Cloud Intelligence Dashboard for Azure parameters. Used to setup
-        Glue Notebook parameters for interactive sessions.
+          var_raw_path = 's3://${S3Bucket}/azurecidraw/'
+          var_parquet_path = 's3://${S3Bucket}/azurecidparquet/'
+          var_processed_path = 's3://${S3Bucket}/azurecidprocessed/'
+          var_glue_database = '${GlueDatabase}'
+          var_glue_table = '${GlueTable}'
+          var_bucket = '${S3Bucket}'
+          var_raw_folder = 'azurecidraw'
+          var_processed_folder = 'azurecidprocessed'
+          var_parquet_folder = 'azurecidparquet'
+          var_date_format = '${AzureDateFormat}'
+          var_folderpath = '${AzureFolderPath}'
+          var_azuretags = '{{resolve:ssm:${SMParameterVarAzureTags}}}'
+          var_account_type = '${AccountType}'
+          var_bulk_run_ssm_name = '${PrefixCode}smp${EnvironmentCode}cidazure-var_bulk_run'
+          var_error_folder = 'azureciderror'
+          var_lambda01_name = '${LambdaFunction01}'
+          var_raw_fullpath = var_raw_path + var_folderpath
+          SELECTED_TAGS = var_azuretags.split(", ")
+      Description: Cloud Intelligence Dashboard for Azure parameters. Used to setup Glue Notebook parameters for interactive sessions.
       Tags:
         Customer: !Sub ${OwnerTag}
         Environment: !Sub ${EnvironmentTag}
@@ -882,25 +845,23 @@ Resources:
       Name: !Sub ${PrefixCode}smp${EnvironmentCode}-cidazure-gluenotebookargsFOCUS
       Type: String
       Value: !Sub |
-        var_raw_path = 's3://${S3Bucket}/azurecidraw/'
-        var_parquet_path = 's3://${S3Bucket}/azurecidparquetfocus/'
-        var_processed_path = 's3://${S3Bucket}/azurecidprocessedfocus/'
-        var_glue_database = '${GlueDatabase}'
-        var_glue_table = '${GlueTable}'
-        var_bucket = '${S3Bucket}'
-        var_raw_folder = 'azurecidraw'
-        var_processed_folder = 'azurecidprocessedfocus'
-        var_parquet_folder = 'azurecidparquetfocus'
-        var_date_format = '${AzureDateFormat}'
-        var_folderpath = '${AzureFolderPath}'
-        var_bulk_run_ssm_name = '${PrefixCode}smp${EnvironmentCode}cidazure-var_bulk_run'
-        var_account_type = '${AccountType}'
-        var_error_folder = 'azureciderrorfocus'
-        var_lambda01_name = '${LambdaFunction01}'
-        var_raw_fullpath = var_raw_path + var_folderpath
-      Description: Cloud Intelligence Dashboard for Azure parameters. Used to setup
-        Glue Notebook parameters with FOCUS specification for interactive
-        sessions.
+          var_raw_path = 's3://${S3Bucket}/azurecidraw/'
+          var_parquet_path = 's3://${S3Bucket}/azurecidparquetfocus/'
+          var_processed_path = 's3://${S3Bucket}/azurecidprocessedfocus/'
+          var_glue_database = '${GlueDatabase}'
+          var_glue_table = '${GlueTable}'
+          var_bucket = '${S3Bucket}'
+          var_raw_folder = 'azurecidraw'
+          var_processed_folder = 'azurecidprocessedfocus'
+          var_parquet_folder = 'azurecidparquetfocus'
+          var_date_format = '${AzureDateFormat}'
+          var_folderpath = '${AzureFolderPath}'
+          var_bulk_run_ssm_name = '${PrefixCode}smp${EnvironmentCode}cidazure-var_bulk_run'
+          var_account_type = '${AccountType}'
+          var_error_folder = 'azureciderrorfocus'
+          var_lambda01_name = '${LambdaFunction01}'
+          var_raw_fullpath = var_raw_path + var_folderpath
+      Description: Cloud Intelligence Dashboard for Azure parameters. Used to setup Glue Notebook parameters with FOCUS specification for interactive sessions.
       Tags:
         Customer: !Sub ${OwnerTag}
         Environment: !Sub ${EnvironmentTag}
@@ -908,23 +869,15 @@ Resources:
         Solution: AWSCIDforAzure
         Rtype: parameter
         Name: !Sub ${PrefixCode}smp${EnvironmentCode}-cidazure-gluenotebookargsFOCUS
-
+  
   ### Create SSM Parameter to supply dashboard installation command
   SMParameterDashboardDeploy:
     Type: AWS::SSM::Parameter
     Properties:
       Name: !Sub ${PrefixCode}smp${EnvironmentCode}-deploy_dashboard_command
       Type: String
-      Value: !Sub cid-cmd deploy  --resources
-        'https://raw.githubusercontent.com/aws-samples/aws-data-pipelines-for-azure-storage/main/CloudIntelligenceDashboardforAzure/CFN/cid-azure-dashboard.yaml'
-        --customer '${PrefixCode}' --environment '${EnvironmentCode}'
-        --athena-database '${GlueDatabase}'  --share-method 'account'
-        --athena-workgroup '${AthenaWorkgroup}' --quicksight-datasource-id
-        AWSCIDforAzure --source-table '${GlueTable}' --dashboard-id
-        '${PrefixCode}-${EnvironmentCode}-azure-cost'
-        --quicksight-datasource-role '${QuickSightServiceRole}'
-      Description: Cloud Intelligence Dashboard for Azure parameter. Command used to
-        deploy dashboard
+      Value: !Sub cid-cmd deploy  --resources 'https://raw.githubusercontent.com/aws-samples/aws-data-pipelines-for-azure-storage/main/CloudIntelligenceDashboardforAzure/CFN/cid-azure-dashboard.yaml' --customer '${PrefixCode}' --environment '${EnvironmentCode}' --athena-database '${GlueDatabase}'  --share-method 'account' --athena-workgroup '${AthenaWorkgroup}' --quicksight-datasource-id AWSCIDforAzure --source-table '${GlueTable}' --dashboard-id '${PrefixCode}-${EnvironmentCode}-azure-cost' --quicksight-datasource-role '${QuickSightServiceRole}'
+      Description: Cloud Intelligence Dashboard for Azure parameter. Command used to deploy dashboard
       Tags:
         Customer: !Sub ${OwnerTag}
         Environment: !Sub ${EnvironmentTag}
@@ -932,7 +885,7 @@ Resources:
         Solution: AWSCIDforAzure
         Rtype: parameter
         Name: !Sub ${PrefixCode}smp${EnvironmentCode}var_azuretags
-
+  
   ### Create Athena resources
   AthenaWorkgroup:
     Type: AWS::Athena::WorkGroup
@@ -969,19 +922,16 @@ Resources:
       Database: !Ref GlueDatabase
       Description: Cloud Intelligence Dashboard for Azure standard export Athena Named Query
       Name: !Sub ${PrefixCode}atq${EnvironmentCode}cidazure
-      QueryString: !Sub CREATE OR REPLACE VIEW "${GlueTable}_athena_view" AS SELECT *
-        FROM "${GlueTable}" WHERE month >= DATE(to_iso8601(current_date -
-        interval '6' month))
+      QueryString: !Sub CREATE OR REPLACE VIEW "${GlueTable}_athena_view" AS SELECT * FROM "${GlueTable}" WHERE month >= DATE(to_iso8601(current_date - interval '6' month))
       WorkGroup: !Ref AthenaWorkgroup
   AthenaQueryFOCUSSummaryView:
     Type: AWS::Athena::NamedQuery
     Properties:
       Database: customer_cur_data
-      Description: Cloud Intelligence Dashboard for Azure FOCUS export Athena Named
-        Query Summary View
+      Description: Cloud Intelligence Dashboard for Azure FOCUS export Athena Named Query Summary View
       Name: !Sub ${PrefixCode}atq${EnvironmentCode}cidazurefocussummaryview
       QueryString: !Sub |
-        CREATE OR REPLACE VIEW "focus_summary_view_azure" AS
+        CREATE OR REPLACE VIEW "focus_summary_view_azure" AS 
         SELECT
             AvailabilityZone,
             BillingAccountId,
@@ -993,10 +943,10 @@ Resources:
             ChargeDescription,
             ChargeFrequency,
             CAST(
-                (CASE
-                    WHEN (date_trunc('month', ChargePeriodStart) >= (date_trunc('month', current_timestamp) - INTERVAL '3' MONTH))
-                    THEN date_trunc('day', ChargePeriodStart)
-                    ELSE date_trunc('month', ChargePeriodStart)
+                (CASE 
+                    WHEN (date_trunc('month', ChargePeriodStart) >= (date_trunc('month', current_timestamp) - INTERVAL '3' MONTH)) 
+                    THEN date_trunc('day', ChargePeriodStart) 
+                    ELSE date_trunc('month', ChargePeriodStart) 
                 END) AS DATE
             ) AS ChargePeriodStart,
             CommitmentDiscountCategory,
@@ -1037,10 +987,10 @@ Resources:
         FROM
             -- Default AWS FOCUS database name and table used below. Change if necessary
             "cid_data_export"."focus"
-        WHERE
-            (BillingPeriodStart >= (date_trunc('month', current_timestamp) - INTERVAL '7' MONTH))
+        WHERE 
+            (BillingPeriodStart >= (date_trunc('month', current_timestamp) - INTERVAL '7' MONTH)) 
             AND (CAST(concat(billing_period, '-01') AS DATE) >= (date_trunc('month', current_date) - INTERVAL '7' MONTH))
-        GROUP BY
+        GROUP BY 
             AvailabilityZone,
             BillingAccountId,
             BillingAccountName,
@@ -1078,7 +1028,9 @@ Resources:
             -- Tag extraction section END
             billing_period,
             'Azure Only Field'
+
         UNION ALL
+
         SELECT
             NULL AS AvailabilityZone,
             BillingAccountId,
@@ -1127,7 +1079,7 @@ Resources:
             SUM(PricingQuantity) AS PricingQuantity
         FROM
             "${GlueDatabase}"."${GlueTable}"
-        GROUP BY
+        GROUP BY 
             BillingAccountId,
             BillingAccountName,
             BillingCurrency,
@@ -1168,8 +1120,7 @@ Resources:
     Type: AWS::Athena::NamedQuery
     Properties:
       Database: customer_cur_data
-      Description: Cloud Intelligence Dashboard for Azure FOCUS export Athena Named
-        Query Resource View
+      Description: Cloud Intelligence Dashboard for Azure FOCUS export Athena Named Query Resource View
       Name: !Sub ${PrefixCode}atq${EnvironmentCode}cidazurefocusresourceview
       QueryString: !Sub |
         CREATE OR REPLACE VIEW "focus_resource_view_azure" AS
@@ -1184,10 +1135,10 @@ Resources:
             ChargeDescription,
             ChargeFrequency,
             CAST(
-                CASE
-                    WHEN date_trunc('month', ChargePeriodStart) >= date_trunc('month', current_timestamp) - INTERVAL '3' MONTH
-                    THEN date_trunc('day', ChargePeriodStart)
-                    ELSE date_trunc('month', ChargePeriodStart)
+                CASE 
+                    WHEN date_trunc('month', ChargePeriodStart) >= date_trunc('month', current_timestamp) - INTERVAL '3' MONTH 
+                    THEN date_trunc('day', ChargePeriodStart) 
+                    ELSE date_trunc('month', ChargePeriodStart) 
                 END AS DATE
             ) AS ChargePeriodStart,
             CommitmentDiscountCategory,
@@ -1231,11 +1182,11 @@ Resources:
         FROM
             -- Default AWS FOCUS database name and table used below. Change if necessary
             "cid_data_export"."focus"
-        WHERE
-            (current_date - INTERVAL '30' DAY) <= ChargePeriodStart
-            AND ResourceId <> ''
+        WHERE 
+            (current_date - INTERVAL '30' DAY) <= ChargePeriodStart 
+            AND ResourceId <> '' 
             AND CAST(CONCAT(billing_period, '-01') AS DATE) >= date_trunc('month', current_date - INTERVAL '30' DAY)
-        GROUP BY
+        GROUP BY 
             AvailabilityZone,
             BillingAccountId,
             BillingAccountName,
@@ -1276,7 +1227,9 @@ Resources:
             -- Tag extraction section END
             billing_period,
             'Azure Only Field'
+            
         UNION ALL
+
         SELECT
             NULL AS AvailabilityZone,
             BillingAccountId,
@@ -1328,7 +1281,7 @@ Resources:
             SUM(PricingQuantity) AS PricingQuantity
         FROM
             "${GlueDatabase}"."${GlueTable}"
-        GROUP BY
+        GROUP BY 
             BillingAccountId,
             BillingAccountName,
             BillingCurrency,
@@ -1409,8 +1362,8 @@ Resources:
       Code:
         S3Bucket: !Sub ${SourceBucket}
         S3Key: cid-azure-lambda01.zip
-      MemorySize: 128
-      ReservedConcurrentExecutions: 1
+      MemorySize: 3008
+     # ReservedConcurrentExecutions: 1
       Role: !GetAtt LambdaIAM.Arn
       Runtime: python3.9
       Timeout: 90
@@ -1445,8 +1398,8 @@ Resources:
       Code:
         S3Bucket: !Sub ${SourceBucket}
         S3Key: cid-azure-lambda02.zip
-      MemorySize: 2560
-      ReservedConcurrentExecutions: 1
+      MemorySize: 3008
+      #ReservedConcurrentExecutions: 1
       Role: !GetAtt LambdaIAM.Arn
       Runtime: python3.9
       Timeout: 900
@@ -1484,7 +1437,7 @@ Resources:
       Code:
         S3Bucket: !Sub ${SourceBucket}
         S3Key: cid-azure-lambda03.zip
-      MemorySize: 5120
+      MemorySize: 3008
       Role: !GetAtt LambdaIAM.Arn
       Runtime: python3.9
       Timeout: 900
@@ -1522,7 +1475,7 @@ Resources:
       Code:
         S3Bucket: !Sub ${SourceBucket}
         S3Key: cid-azure-lambda04.zip
-      MemorySize: 1024
+      MemorySize: 3008
       Role: !GetAtt LambdaIAM.Arn
       Runtime: python3.9
       Timeout: 900
@@ -1557,7 +1510,7 @@ Resources:
       Code:
         S3Bucket: !Sub ${SourceBucket}
         S3Key: cid-azure-lambda05.zip
-      MemorySize: 2056
+      MemorySize: 3008
       Role: !GetAtt LambdaIAM.Arn
       Runtime: python3.9
       Timeout: 900
@@ -1595,7 +1548,7 @@ Resources:
       Code:
         S3Bucket: !Sub ${SourceBucket}
         S3Key: cid-azure-lambda06.zip
-      MemorySize: 1024
+      MemorySize: 3008
       Role: !GetAtt LambdaIAM.Arn
       Runtime: python3.9
       Timeout: 900
@@ -1619,14 +1572,14 @@ Resources:
         - Key: Name
           Value: !Sub ${PrefixCode}lmd${EnvironmentCode}cidazurelambda06
 
-  ### Create installation log
+### Create installation log
   LambdaFunctionLogRole:
     Type: AWS::IAM::Role
     Properties:
       Description: Cloud Intelligence Dashboard for Azure IAM role for install logging
       RoleName: !Sub ${PrefixCode}iar${EnvironmentCode}cidazurelog
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -1639,15 +1592,15 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                  - logs:CreateLogGroup
-                Resource:
-                  - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${PrefixCode}lmd${EnvironmentCode}cidazurelog
-                  - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${PrefixCode}lmd${EnvironmentCode}cidazurelog:*
-                  - !Sub arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${PrefixCode}lmd${EnvironmentCode}cidazurelog:*:*
+            - Effect: Allow
+              Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:CreateLogGroup
+              Resource:
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${PrefixCode}lmd${EnvironmentCode}cidazurelog"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${PrefixCode}lmd${EnvironmentCode}cidazurelog:*"
+              - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${PrefixCode}lmd${EnvironmentCode}cidazurelog:*:*"
       Tags:
         - Key: Owner
           Value: !Sub ${OwnerTag}
@@ -1669,7 +1622,7 @@ Resources:
       Runtime: python3.12
       FunctionName: !Sub ${PrefixCode}lmd${EnvironmentCode}cidazurelog
       Handler: index.lambda_handler
-      MemorySize: 128
+      MemorySize: 3008
       Role: !GetAtt LambdaFunctionLogRole.Arn
       Timeout: 15
       Environment:
@@ -1681,11 +1634,14 @@ Resources:
           import json
           import uuid
           import urllib3
+
           import boto3
           import cfnresponse
+
           http = urllib3.PoolManager()
           endpoint = os.environ["API_ENDPOINT"]
           account_id = boto3.client("sts").get_caller_identity()["Account"]
+
           def execute_request(action, product_id, via_key):
               try:
                   payload = {'dashboard_id': product_id, 'account_id': account_id, via_key: 'CFN'}
@@ -1696,6 +1652,7 @@ Resources:
               except urllib3.exceptions.HTTPError as e:
                   return f"Issue logging action {action} for product {product_id} and account {account_id}, due to a urllib3 exception {str(e)}. This issue will be ignored"
               return None
+
           def register_deployment(action, products):
               message = f"Successfully logged  {action} for {products}"
               for product_id in products:
@@ -1709,11 +1666,13 @@ Resources:
                       message = f"Successfully logged {action} for {products} "
               #Do not stop deployment if we're not able to successfully record this deployment, still return true
               return (True, message)
+
           def lambda_handler(event, context):
               if event['RequestType'] in ['Create', 'Update', 'Delete']:
                   res, reason = register_deployment(event['RequestType'], event['ResourceProperties']['DeploymentType'])
               else:
                   res, reason = False, "Unknown operation: " + event['RequestType']
+
               physicalResourceId = event.get('ResourceProperties', {}).get('Export', {}).get('Name') or str(uuid.uuid1())
               if res:
                   cfnresponse.send(event, context, cfnresponse.SUCCESS, {}, physicalResourceId )
@@ -1737,21 +1696,15 @@ Resources:
     Type: Custom::InstallLoggerforCIDAzureFOCUS
     Properties:
       ServiceToken: !GetAtt LambdaFunctionLog.Arn
-      DeploymentType:
-        - !If
-          - IsExportFocus
-          - cid-azure-focus
-          - !Ref AWS::NoValue
-        - !If
-          - IsExportStandard
-          - cid-azure-standard
-          - !Ref AWS::NoValue
+      DeploymentType: 
+        - !If [IsExportFocus, "cid-azure-focus", !Ref 'AWS::NoValue']
+        - !If [IsExportStandard, "cid-azure-standard", !Ref 'AWS::NoValue']
 
   ### Create SNS queues
   SNSTopicL1L2:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: ''
+      DisplayName: ""
       TopicName: !Sub ${PrefixCode}sns${EnvironmentCode}cidazureL1_to_L2
       KmsMasterKeyId: alias/aws/sns
       Tags:
@@ -1770,7 +1723,7 @@ Resources:
   SNSTopicL2L3:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: ''
+      DisplayName: ""
       KmsMasterKeyId: alias/aws/sns
       TopicName: !Sub ${PrefixCode}sns${EnvironmentCode}cidazureL2_to_L3
       Tags:
@@ -1789,7 +1742,7 @@ Resources:
   SNSTopicLargeFileInit:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: ''
+      DisplayName: ""
       KmsMasterKeyId: alias/aws/sns
       TopicName: !Sub ${PrefixCode}sns${EnvironmentCode}cidazureLargeFileInit
       Tags:
@@ -1808,7 +1761,7 @@ Resources:
   SNSTopicLargeFilePart:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: ''
+      DisplayName: ""
       KmsMasterKeyId: alias/aws/sns
       TopicName: !Sub ${PrefixCode}sns${EnvironmentCode}cidazureLargeFilePart
       Tags:
@@ -1827,7 +1780,7 @@ Resources:
   SNSTopicLargeFileRecomb:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: ''
+      DisplayName: ""
       KmsMasterKeyId: alias/aws/sns
       TopicName: !Sub ${PrefixCode}sns${EnvironmentCode}cidazureLargeFileRecomb
       Tags:
@@ -1846,7 +1799,7 @@ Resources:
   SNSTopicDeadLetterQueue:
     Type: AWS::SNS::Topic
     Properties:
-      DisplayName: ''
+      DisplayName: ""
       KmsMasterKeyId: alias/aws/sns
       TopicName: !Sub ${PrefixCode}sns${EnvironmentCode}cidazureDLQ
       Tags:
@@ -1941,7 +1894,7 @@ Resources:
       Name: !Sub ${PrefixCode}evr${EnvironmentCode}cidazure
       RoleArn: !GetAtt EventBridgeIAM.Arn
       ScheduleExpression: !Sub ${AzureCopySchedule}
-      State: ENABLED
+      State: "ENABLED"
       Targets:
         - Arn: !GetAtt LambdaFunction01.Arn
           Id: InvokeLaunchQualification
@@ -1949,8 +1902,8 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       FunctionName: !Ref LambdaFunction01
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
       SourceArn: !GetAtt ScheduledRule.Arn
 
   ### Cloudwatch Dashboard
