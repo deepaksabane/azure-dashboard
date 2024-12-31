@@ -1,0 +1,139 @@
+import sys
+import json
+import boto3
+from pyspark.sql.functions import to_date, trunc, input_file_name, lit
+from awsglue.transforms import *
+from awsglue.utils import getResolvedOptions
+from pyspark.context import SparkContext
+from awsglue.context import GlueContext
+from awsglue.job import Job
+from pyspark.sql.types import MapType, StringType
+from awsglue.dynamicframe import DynamicFrame
+from pyspark.sql.functions import col, to_date
+from pyspark.sql.types import *
+
+# Initialize Spark and Glue contexts
+sc = SparkContext.getOrCreate()
+glueContext = GlueContext(sc)
+spark = glueContext.spark_session
+
+# Fetch parameters from Glue job
+args = getResolvedOptions(sys.argv, [
+    'JOB_NAME', 'var_raw_path', 'var_folderpath', 'var_parquet_path', 'var_glue_database',
+    'var_glue_table', 'var_bucket', 'var_raw_folder', 'var_parquet_folder',
+    'var_date_format', 'var_account_type'
+])
+var_account_type = args['var_account_type']
+var_raw_path = args['var_raw_path']
+var_folderpath = args['var_folderpath']
+var_parquet_path = args['var_parquet_path']
+var_glue_database = args['var_glue_database']
+var_glue_table = args['var_glue_table']
+var_bucket = args['var_bucket']
+var_raw_folder = args['var_raw_folder']
+var_parquet_folder = args['var_parquet_folder']
+var_date_format = args['var_date_format']
+var_raw_fullpath = var_raw_path + var_folderpath
+
+# Read CSV, add file_path column, and trim whitespace from column names
+try:
+    df1 = spark.read.option("header", "true").option("delimiter", ",").option("escape", "\"").csv(var_raw_fullpath)
+    df1 = df1.withColumn("file_path", input_file_name())
+    df1 = df1.toDF(*[col.strip() for col in df1.columns])  # Trim whitespace from column names
+    print(f"INFO: Successfully read CSV files from {var_raw_fullpath}.")
+except Exception as e:
+    print("WARNING: Cannot read CSV file(s) in {}. Incorrect path or folder empty.".format(var_raw_fullpath))
+    print("ERROR: {}".format(e))
+    raise e
+df1 = df1.toDF(*[col.strip() for col in df1.columns])  # Trim whitespace from column names
+
+df1 = df1.withColumnRenamed("billingperiodenddate", "BillingPeriodEndDate") \
+    .withColumnRenamed("billingperiodstartdate", "BillingPeriodStartDate") \
+    .withColumnRenamed("cost", "Cost") \
+    .withColumnRenamed("costbillingcurrency", "CostInBillingCurrency") \
+    .withColumnRenamed("date", "Date") \
+    .withColumnRenamed("effectiveprice", "EffectivePrice") \
+    .withColumnRenamed("paygprice", "PayGPrice") \
+    .withColumnRenamed("quantity", "Quantity") \
+    .withColumnRenamed("tags", "Tags") \
+    .withColumnRenamed("unitprice", "UnitPrice") \
+    .withColumnRenamed("billingperiodenddateparsed", "BillingPeriodEndDateParsed") \
+    .withColumnRenamed("billingperiodstartdateparsed", "BillingPeriodStartDateParsed") \
+    .withColumnRenamed("dateparsed", "DateParsed")
+
+# Set Data Types
+df1 = df1.withColumn("BillingPeriodEndDateParsed", to_date(df1.BillingPeriodEndDate, var_date_format)) \
+    .withColumn("BillingPeriodStartDateParsed", to_date(df1.BillingPeriodStartDate, var_date_format)) \
+ \
+    .withColumn("CostInBillingCurrency", col("CostInBillingCurrency").cast(DecimalType(23, 16))) \
+    .withColumn("DateParsed", to_date(df1.DateParsed, var_date_format)) \
+    .withColumn("EffectivePrice", col("EffectivePrice").cast(DecimalType(23, 16))) \
+    .withColumn("PayGPrice", col("PayGPrice").cast(LongType())) \
+    .withColumn("Quantity", col("Quantity").cast(DoubleType())) \
+    .withColumn("UnitPrice", col("UnitPrice").cast(DoubleType()))
+
+### MAPPING SECTION 2: To render sample dashboard complete the mapping below. Change the first value to match CSV headers. Do not change the second value.
+df1 = df1.withColumnRenamed("accountname", "AccountName") \
+    .withColumnRenamed("billingaccountname", "BillingAccountName") \
+    .withColumnRenamed("metercategory", "MeterCategory") \
+    .withColumnRenamed("metersubcategory", "MeterSubCategory") \
+    .withColumnRenamed("resourcelocation", "ResourceLocation") \
+    .withColumnRenamed("subscriptionname", "SubscriptionName") \
+    .withColumnRenamed("unitofmeasure", "UnitOfMeasure")
+try:
+    if var_account_type == "EA" or var_account_type == "MCA":
+        # Rename Cost column to CostinBillingCurrency
+        if "Cost" in df1.columns:
+            df1 = df1.withColumnRenamed("Cost", "CostInBillingCurrency")
+
+except Exception as e:
+    # If the file(s) cannot be processed, move to the error folder
+    print("WARNING: Cannot parse columns. Error in CSV file(s). Moved to error folder if normal run")
+    print("ERROR: {}".format(e))
+    raise e
+
+# Log schema to confirm column availability
+print("INFO: Schema of the DataFrame after reading the CSV:")
+df1.printSchema()
+
+# Create formatted OrderDate column if needed
+# df1 = df1.withColumn("OrderDate", to_date(df1["OrderDate"], var_date_format))
+
+# Create partition column for month
+# df1 = df1.withColumn("Month", trunc(df1["OrderDate"], "MM"))
+df1 = df1.withColumn("DateParsed", to_date(df1["Date"], "M/d/yyyy"))
+
+# Create the Month column from the parsed date column
+df1 = df1.withColumn("Month", trunc(df1["DateParsed"], "MM"))
+
+# Check if 'Month' column was created successfully
+if 'Month' not in df1.columns:
+    print("ERROR: Month column was not created. Check the OrderDate formatting.")
+    raise ValueError("Month column not found in DataFrame.")
+### Parquet clean up to avoid duplication.
+
+
+# Convert DataFrame to DynamicFrame and write to S3
+try:
+    dyf1 = DynamicFrame.fromDF(df1, glueContext, "dyf1")
+
+    # Check if the DynamicFrame is not empty before writing
+    if dyf1.count() == 0:
+        print("WARNING: The DynamicFrame is empty. No data to write.")
+    else:
+        # Ensure your IAM role has the necessary permissions to write to S3 and update Glue catalog
+        sink = glueContext.getSink(connection_type="s3", path=var_parquet_path, enableUpdateCatalog=True,
+                                   partitionKeys=["Month"])
+        sink.setFormat("glueparquet")
+        sink.setCatalogInfo(catalogDatabase=var_glue_database, catalogTableName=var_glue_table)
+        sink.writeFrame(dyf1)
+        print("INFO: Successfully wrote to Parquet and updated Glue Catalog.")
+except Exception as e:
+    print("WARNING: Cannot convert file(s) to Parquet. Error: {}".format(e))
+    raise e
+
+# Log the count of records for verification
+try:
+    print(f"INFO: Total records processed: {dyf1.count()}")
+except Exception as e:
+    print("WARNING: Unable to count records in DynamicFrame. Error: {}".format(e))
