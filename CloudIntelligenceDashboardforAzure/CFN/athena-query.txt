@@ -1,0 +1,86 @@
+CREATE OR REPLACE VIEW "cidgltpdcidazure_athena_view" AS SELECT * FROM  "cidgltpdcidazure" WHERE month >= DATE(to_iso8601(current_date - interval '6' month))
+
+
+and the path of blob storage 
+Parameters
+Parameters are defined in your template and allow you to input custom values when you create or update a stack.
+
+Common Settings
+SourceBucket
+The new S3 bucket created which contains Cloud Intelligence Dashboard for Azure installation/source files
+prod-app-assets-ap-south-1a
+PrefixCode
+Prefix used to name all resources created by this CloudFormation template. Use 3 alphanumeric characters only. Cannot be 'aws'. E.g 'fin' for FinOps
+cid
+EnvironmentCode
+Code used to name all resources created by this CloudFormation template. Use 2 alphanumeric characters only. E.g. 'pd' for production
+pd
+OwnerTag
+Owner tag value. All resources are created with an 'Owner' tag and the value you set here. e.g. finops, devops, IT shared services, etc.
+Amazon Web Services
+EnvironmentTag
+Environment tag value. All resources are created with an 'Environment' tag and the value you set here. e.g. production, staging, development
+production
+QuickSightServiceRole
+IAM Role used by QuickSight to access Amazon S3. You may not have the below service role or you may have setup a custom role such as CidCmdQuickSightDataSourceRole
+aws-quicksight-service-role-v0
+Microsoft Azure Settings
+AccountType
+Microsoft Azure account type.
+
+MCA
+AzureBlobURL
+Microsoft Azure Primary Blob endpoint URL
+https://cprsdevstorage.blob.core.windows.net
+AzureApplicationID
+Microsoft Azure Application ID
+Use previous value
+AzureTenantID
+Microsoft Azure Tenant ID
+Use previous value
+AzureSecretKey
+Microsoft Azure Client Secret
+Use previous value
+AzureDateFormat
+Format of date in Azure cost export, check the date column of your Azure csv export to verify.
+
+yyyy-MM-dd
+AzureFolderPath
+Path to Azure cost export folders, used by AWS Glue job. "directory/*" = <azure storage account>/<azure storage container>/directory/* "directory/*/*" = File Partitioning enabled or FOCUS Export
+cost/cost/20241101-20241130/*/*
+AzureTags
+List of Azure tags names you would like to bring across to QuickSight. WARNING leave a space after each comma. You will need at least one value, make one up if you don't have anything. Case sensitive.
+Environment, CostCenter, System, Department
+AzureOverwritedataEnabled
+Select "true" if the Azure Export is set to overwrite the same file throughout the month, rather than generating a new file for each export.
+
+true
+Export Settings
+ExportType
+Select the type of Azure export you configured. Select "Standard" for the regular expor or "FOCUS" for the FOCUS specification.
+
+Standard
+Data Copy Settings
+AzureCopySchedule
+Scheduled time (UTC) for Azure data pull. Must be a CRON expression. The default sets the schedule to 3am daily
+cron(0 3 * * ? *)
+GlueCopySchedule
+Scheduled time (UTC) for Glue data processing. Must be a CRON expression. The default sets the schedule to 4am daily. Must be after Azure data pull above
+cron(0 4 * * ? *)
+BlobToS3SyncStartDate
+Minimum age of the objects to be copied. Must be a valid format (YYYYMMDD)
+20220820
+Advanced Settings (DO NOT CHANGE)
+PartitionSize
+Multipart upload partition size in bytes
+104857600
+MaxPartitionsPerFile
+The maximum amount of partitions to create for each multi part file. Must be an integer between 5 and 10000
+100
+UseFullFilePath
+Retain Azure storage path
+
+true
+Cancel
+Previous
+Next
