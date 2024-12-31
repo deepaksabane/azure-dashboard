@@ -1,0 +1,198 @@
+# Cloud Intelligence Dashboard for Azure QuickSight template
+dashboards:
+  AWSCIDFORAZURE:
+    dependsOn:
+      datasets:
+        ${customer}gld${environment}cidazure: AWSCIDforAzure
+    name: "${customer} ${environment} Azure Cost Dashboard"
+    dashboardId: ${customer}-${environment}-azure-cost
+    templateId: cid-azure-cost
+datasets:
+  ${customer}gld${environment}cidazure:
+    data:
+      DataSetId: ${customer}gld${environment}cidazure
+      Name: ${customer}gld${environment}cidazure
+      PhysicalTableMap:
+        6bd8744d-0c73-4c7b-ad8c-98a80db21b3a:
+          RelationalTable:
+            DataSourceArn: ${athena_datasource_arn}
+            Catalog: AwsDataCatalog
+            Schema: ${athena_database_name}
+            Name: ${customer}glt${environment}cidazure_athena_view
+            InputColumns:
+            - Name: PartnerId
+              Type: STRING
+            - Name: CustomerId
+              Type: STRING
+            - Name: CustomerName
+              Type: STRING
+            - Name: CustomerDomainName
+              Type: STRING
+            - Name: CustomerCountry
+              Type: STRING
+            - Name: InvoiceNumber
+              Type: STRING
+            - Name: MpnId
+              Type: STRING
+            - Name: OrderId
+              Type: STRING
+            - Name: OrderDate
+              Type: STRING
+            - Name: ProductId
+              Type: STRING
+            - Name: SkuId
+              Type: STRING
+            - Name: AvailabilityId
+              Type: STRING
+            - Name: SkuName
+              Type: STRING
+            - Name: ProductName
+              Type: STRING
+            - Name: ChargeType
+              Type: STRING
+            - Name: UnitPrice
+              Type: DECIMAL
+            - Name: Quantity
+              Type: DECIMAL
+            - Name: Subtotal
+              Type: DECIMAL
+            - Name: TaxTotal
+              Type: DECIMAL
+            - Name: Total
+              Type: DECIMAL
+            - Name: Currency
+              Type: STRING
+            - Name: PriceAdjustmentDescription
+              Type: STRING
+            - Name: PublisherName
+              Type: STRING
+            - Name: PublisherId
+              Type: STRING
+            - Name: SubscriptionDescription
+              Type: STRING
+            - Name: SubscriptionId
+              Type: STRING
+            - Name: BillingPeriodStartDate  # Updated column name
+              Type: STRING
+            - Name: BillingPeriodEndDate
+              Type: STRING
+            - Name: TermAndBillingCycle
+              Type: STRING
+            - Name: EffectiveUnitPrice
+              Type: DECIMAL
+            - Name: UnitType
+              Type: STRING
+            - Name: AlternateId
+              Type: STRING
+            - Name: BillableQuantity
+              Type: DECIMAL
+            - Name: BillingFrequency
+              Type: STRING
+            - Name: PricingCurrency
+              Type: STRING
+            - Name: PCToBCExchangeRate
+              Type: DECIMAL
+            - Name: PCToBCExchangeRateDate
+              Type: STRING
+            - Name: MeterDescription
+              Type: STRING
+            - Name: ReservationOrderId
+              Type: STRING
+            - Name: CreditReasonCode
+              Type: STRING
+            - Name: SubscriptionStartDate
+              Type: STRING
+            - Name: SubscriptionEndDate
+              Type: STRING
+            - Name: ReferenceId
+              Type: STRING
+            - Name: ProductQualifiers
+              Type: STRING
+            - Name: PromotionId
+              Type: STRING
+      LogicalTableMap:
+        ad02f24b-6c52-4c3b-b6bd-622ecbff5aee:
+          Alias: ${customer}glt${environment}cidazure_athena_view
+          DataTransforms:
+          - ProjectOperation:
+              ProjectedColumns:
+              - PartnerId
+              - CustomerId
+              - CustomerName
+              - CustomerDomainName
+              - CustomerCountry
+              - InvoiceNumber
+              - MpnId
+              - OrderId
+              - OrderDate
+              - ProductId
+              - SkuId
+              - AvailabilityId
+              - SkuName
+              - ProductName
+              - ChargeType
+              - UnitPrice
+              - Quantity
+              - Subtotal
+              - TaxTotal
+              - Total
+              - Currency
+              - PriceAdjustmentDescription
+              - PublisherName
+              - PublisherId
+              - SubscriptionDescription
+              - SubscriptionId
+              - BillingPeriodStartDate  # Updated column name
+              - BillingPeriodEndDate
+              - TermAndBillingCycle
+              - EffectiveUnitPrice
+              - UnitType
+              - AlternateId
+              - BillableQuantity
+              - BillingFrequency
+              - PricingCurrency
+              - PCToBCExchangeRate
+              - PCToBCExchangeRateDate
+              - MeterDescription
+              - ReservationOrderId
+              - CreditReasonCode
+              - SubscriptionStartDate
+              - SubscriptionEndDate
+              - ReferenceId
+              - ProductQualifiers
+              - PromotionId
+          Source:
+            PhysicalTableId: 6bd8744d-0c73-4c7b-ad8c-98a80db21b3a
+      ImportMode: SPICE  # Adjust based on your needs
+    dependsOn:
+      views:
+        - ${customer}glt${environment}cidazure_athena_view
+    schedules:
+      default:
+        ScheduleId: cid
+        ScheduleFrequency:
+          Interval: DAILY
+          TimeOfTheDay: '05:00-06:00'
+        RefreshType: FULL_REFRESH
+
+views:
+  ${customer}glt${environment}cidazure_athena_view:
+    dependsOn:
+      views:
+        - ${customer}glt${environment}cidazure
+    data: |-
+      CREATE OR REPLACE VIEW ${athena_database_name}.${customer}glt${environment}cidazure_athena_view AS
+      SELECT *
+      FROM
+        "${source_table}"
+      WHERE (month >= DATE(to_iso8601((current_date - INTERVAL  '6' MONTH))))
+parameters:
+  customer:
+    default: "cid"
+    description: id of customer. Can be any alphanumeric string
+  environment:
+    default: "pd"
+    description: "Environment type (pd=prod, pp=preprod, sb=sandbox). Can be any alphanumeric string"
+  source_table:
+    default: "cidgltpdcidazure"
+    description: "name of table"
